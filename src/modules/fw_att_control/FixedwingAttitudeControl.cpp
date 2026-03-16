@@ -98,15 +98,21 @@ FixedwingAttitudeControl::vehicle_manual_poll(const float yaw_body)
 
 				// STABILIZED mode: setpoint generation
 
-				const float roll_body = _manual_control_setpoint.roll * radians(_param_fw_man_r_max.get());
+				// we want to fly towards the direction of (roll, pitch)
+				Vector2f v = Vector2f(_manual_control_setpoint.roll * radians(_param_fw_man_r_max.get()),
+						-_manual_control_setpoint.pitch * radians(_param_fw_man_p_max.get()) + radians(_param_fw_psp_off.get()));
+				float v_norm = v.norm(); // the norm of v defines the tilt angle
 
-				float pitch_body = -_manual_control_setpoint.pitch * radians(_param_fw_man_p_max.get())
-						   + radians(_param_fw_psp_off.get());
-				pitch_body = constrain(pitch_body,
-						       -radians(_param_fw_man_p_max.get()), radians(_param_fw_man_p_max.get()));
+				Quatf q_sp_rp = AxisAnglef(v(0), v(1), 0.f);
+				// Make sure there's a valid attitude quaternion with no yaw error when yaw is unlocked (NAN)
+				const float yaw_setpoint = yaw_body;
+				// Yaw does not matter!
+				const Quatf q_sp_yaw(cosf(yaw_setpoint / 2.f), 0.f, 0.f, sinf(yaw_setpoint / 2.f));
 
-				const Quatf q(Eulerf(roll_body, pitch_body, yaw_body));
-				q.copyTo(_att_sp.q_d);
+				// Align the desired tilt with the yaw setpoint
+				Quatf q_sp = q_sp_yaw * q_sp_rp;
+
+				q_sp.copyTo(_att_sp.q_d);
 
 				_att_sp.thrust_body[0] = (_manual_control_setpoint.throttle + 1.f) * .5f;
 
