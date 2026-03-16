@@ -139,6 +139,7 @@ void FwLateralLongitudinalControl::Run()
 
 		// update parameters from storage
 		parameters_update();
+		_airspeed_direction_control.setPGainFromPeriodAndDamping(_param_npfg_damping.get(), _param_npfg_period.get());
 	}
 
 	if (_local_pos_sub.update(&_local_pos)) {

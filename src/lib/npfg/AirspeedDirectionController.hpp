@@ -59,13 +59,14 @@
 #ifndef PX4_AIRSPEEDDIRECTIONONTROLLER_HPP
 #define PX4_AIRSPEEDDIRECTIONONTROLLER_HPP
 
+#include <matrix/matrix/math.hpp>
+
 class AirspeedDirectionController
 {
 public:
-
 	AirspeedDirectionController();
 
-
+	void setPGainFromPeriodAndDamping(float damping, float period) {p_gain_ = 4.f * M_PI_F * damping / period;}
 	float controlHeading(const float heading_sp, const float heading, const float airspeed) const;
 
 private:
